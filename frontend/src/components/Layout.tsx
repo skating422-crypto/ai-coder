@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { VscRobot } from "react-icons/vsc";
 import ChatPanel from "./ChatPanel";
-import FileTree from "./FileTree";
+import Sidebar from "./Sidebar";
 import CodeEditor from "./CodeEditor";
 import Terminal from "./Terminal";
 
@@ -29,14 +29,15 @@ export default function Layout() {
           <ChatPanel onFileChanged={handleFileChanged} />
         </div>
 
-        {/* Center: File tree + Editor */}
+        {/* Center: Sidebar (files/search/git) + Editor */}
         <div className="flex flex-1 overflow-hidden">
-          {/* File tree */}
-          <div className="w-[200px] flex-shrink-0 border-r border-gray-700">
-            <FileTree
+          {/* Sidebar */}
+          <div className="flex-shrink-0">
+            <Sidebar
               onSelectFile={setSelectedFile}
               selectedFile={selectedFile ?? undefined}
               refreshKey={refreshKey}
+              onTreeChanged={handleFileChanged}
             />
           </div>
 

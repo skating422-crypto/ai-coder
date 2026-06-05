@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import chat, executor, files
+from app.routers import chat, executor, files, git
 
 app = FastAPI(
     title="AI Coder",
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(files.router)
 app.include_router(executor.router)
+app.include_router(git.router)
 
 
 @app.get("/api/health")

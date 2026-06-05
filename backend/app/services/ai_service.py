@@ -1,6 +1,8 @@
 """Mock AI service that simulates an AI coding assistant."""
 
+import asyncio
 import random
+from collections.abc import AsyncIterator
 
 from app.models.schemas import ChatMessage
 
@@ -135,3 +137,32 @@ def generate_response(message: str, history: list[ChatMessage]) -> dict:
         "content": template.replace("{task}", task),
         "files_changed": [],
     }
+
+
+def _tokenize(text: str) -> list[str]:
+    """Split text into small chunks suitable for incremental streaming."""
+    chunks: list[str] = []
+    buffer = ""
+    for char in text:
+        buffer += char
+        if char in " \n":
+            chunks.append(buffer)
+            buffer = ""
+    if buffer:
+        chunks.append(buffer)
+    return chunks
+
+
+async def stream_response(
+    message: str, history: list[ChatMessage]
+) -> AsyncIterator[dict]:
+    """Stream a mock AI response chunk by chunk.
+
+    Yields dicts of the form ``{"type": "chunk", "content": ...}`` followed by a
+    final ``{"type": "done", "files_changed": [...]}`` event.
+    """
+    result = generate_response(message, history)
+    for chunk in _tokenize(result["content"]):
+        yield {"type": "chunk", "content": chunk}
+        await asyncio.sleep(0.015)
+    yield {"type": "done", "files_changed": result["files_changed"]}

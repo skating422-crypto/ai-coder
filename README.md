@@ -11,10 +11,13 @@ An AI-powered coding assistant — a web-based IDE with chat, file management, c
 ## Features
 
 - 💬 Chat with AI to generate and edit code
+- 🔄 Real-time streaming responses (Server-Sent Events)
 - 📁 Virtual file system with project tree
+- 🗂️ File management — create, rename, and delete files & folders
+- 🔍 Global workspace search across file contents
+- 🌿 Git integration — init, status, diff, and commit in the workspace
 - ✏️ Code editor with syntax highlighting
 - 🖥️ Terminal emulator for command execution
-- 🔄 Real-time streaming responses
 
 ## Quick Start
 
@@ -56,10 +59,26 @@ ai-coder/
 └── README.md
 ```
 
+## API Endpoints
+
+- `POST /api/chat` — non-streaming chat response
+- `POST /api/chat/stream` — streaming chat response (SSE)
+- `GET  /api/files/tree` — workspace file tree
+- `GET  /api/files/content` — read a file
+- `POST /api/files/write` — write a file
+- `POST /api/files/create` — create a file or folder
+- `POST /api/files/rename` — rename/move a file or folder
+- `POST /api/files/delete` — delete a file or folder
+- `GET  /api/files/search` — search file contents
+- `GET  /api/git/status` — workspace git status
+- `POST /api/git/init` — initialize a git repo
+- `GET  /api/git/diff` — diff for the workspace or a file
+- `POST /api/git/commit` — stage all and commit
+- `POST /api/execute` — run a shell command
+
 ## Future Enhancements
 
 - OpenAI / Anthropic API integration
 - Docker sandbox for safe code execution
-- Git integration
 - Multi-file project support
 - Collaborative editing
