@@ -89,3 +89,15 @@ async def execute_command(command: str, cwd: str = "/") -> dict:
 
 def get_workspace_dir() -> str:
     return WORKSPACE_DIR
+
+
+def resolve_in_workspace(path: str) -> str:
+    """Resolve a user-supplied path against the workspace, blocking escapes.
+
+    Raises ValueError if the resolved path falls outside the workspace.
+    """
+    workspace = os.path.realpath(WORKSPACE_DIR)
+    full = os.path.realpath(os.path.join(workspace, path.lstrip("/")))
+    if full != workspace and not full.startswith(workspace + os.sep):
+        raise ValueError(f"Path escapes workspace: {path}")
+    return full

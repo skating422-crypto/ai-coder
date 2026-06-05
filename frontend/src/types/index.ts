@@ -22,3 +22,36 @@ export interface ExecuteResult {
   stderr: string;
   exit_code: number;
 }
+
+export interface SearchMatch {
+  path: string;
+  line: number;
+  text: string;
+}
+
+export interface SearchResponse {
+  query: string;
+  matches: SearchMatch[];
+  truncated: boolean;
+}
+
+export interface GitStatusEntry {
+  path: string;
+  status: string;
+}
+
+export interface GitStatus {
+  initialized: boolean;
+  branch: string;
+  entries: GitStatusEntry[];
+}
+
+export interface GitDiff {
+  path: string;
+  diff: string;
+}
+
+export interface GitCommitResult {
+  committed: boolean;
+  detail: string;
+}

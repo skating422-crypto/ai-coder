@@ -5,3 +5,5 @@ __pycache__/
 .env
 .vite/
 *.egg-info/
+.venv/
+venv/

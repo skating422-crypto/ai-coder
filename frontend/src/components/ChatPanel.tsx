@@ -4,7 +4,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { VscSend, VscRobot, VscAccount } from "react-icons/vsc";
 import type { ChatMessage } from "../types";
-import { sendMessage } from "../services/api";
+import { streamMessage } from "../services/api";
 
 interface ChatPanelProps {
   onFileChanged?: (path: string) => void;
@@ -36,27 +36,46 @@ export default function ChatPanel({ onFileChanged }: ChatPanelProps) {
     if (!text || loading) return;
 
     const userMsg: ChatMessage = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    const history = [...messages, userMsg];
+    setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "" }]);
     setInput("");
     setLoading(true);
 
-    try {
-      const response = await sendMessage(text, messages);
-      setMessages((prev) => [...prev, response]);
-      if (response.files_changed) {
-        response.files_changed.forEach((f) => onFileChanged?.(f));
-      }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "⚠️ Failed to get a response. Is the backend running?",
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    const appendToLast = (text: string) => {
+      setMessages((prev) => {
+        const next = [...prev];
+        const last = next[next.length - 1];
+        next[next.length - 1] = { ...last, content: last.content + text };
+        return next;
+      });
+    };
+
+    await streamMessage(text, history, {
+      onChunk: (chunk) => {
+        appendToLast(chunk);
+      },
+      onDone: (filesChanged) => {
+        setMessages((prev) => {
+          const next = [...prev];
+          const last = next[next.length - 1];
+          next[next.length - 1] = { ...last, files_changed: filesChanged };
+          return next;
+        });
+        filesChanged.forEach((f) => onFileChanged?.(f));
+        setLoading(false);
+      },
+      onError: () => {
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = {
+            role: "assistant",
+            content: "⚠️ Failed to get a response. Is the backend running?",
+          };
+          return next;
+        });
+        setLoading(false);
+      },
+    });
   };
 
   return (
@@ -83,6 +102,13 @@ export default function ChatPanel({ onFileChanged }: ChatPanelProps) {
                   : "bg-gray-800 text-gray-100 border border-gray-700"
               }`}
             >
+              {msg.role === "assistant" && msg.content === "" ? (
+                <div className="flex gap-1 py-0.5">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                </div>
+              ) : (
               <ReactMarkdown
                 components={{
                   code({ className, children, ...props }) {
@@ -117,6 +143,7 @@ export default function ChatPanel({ onFileChanged }: ChatPanelProps) {
               >
                 {msg.content}
               </ReactMarkdown>
+              )}
             </div>
             {msg.role === "user" && (
               <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-1">
@@ -125,20 +152,6 @@ export default function ChatPanel({ onFileChanged }: ChatPanelProps) {
             )}
           </div>
         ))}
-        {loading && (
-          <div className="flex gap-3">
-            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-              <VscRobot className="text-white text-sm" />
-            </div>
-            <div className="bg-gray-800 rounded-lg px-4 py-3 border border-gray-700">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.1s]" />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-              </div>
-            </div>
-          </div>
-        )}
         <div ref={bottomRef} />
       </div>
 
