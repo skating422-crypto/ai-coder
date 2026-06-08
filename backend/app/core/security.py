@@ -7,7 +7,7 @@ def validate_path(workspace_dir: str, user_path: str) -> str:
     """Validate that the path does not escape the workspace. Returns the safe absolute path."""
     workspace = Path(workspace_dir).resolve()
     target = (workspace / user_path.lstrip("/")).resolve()
-    if not str(target).startswith(str(workspace)):
+    if not target.is_relative_to(workspace):
         raise HTTPException(status_code=403, detail="Path traversal detected")
     return str(target)
 

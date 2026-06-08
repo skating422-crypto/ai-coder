@@ -92,6 +92,8 @@ async def execute_command(command: str, cwd: str = "/") -> dict:
         return result
     except TimeoutError:
         logger.error("Command timed out after %d seconds: %s", settings.command_timeout, command)
+        proc.kill()
+        await proc.wait()
         return {
             "stdout": "",
             "stderr": f"Command timed out after {settings.command_timeout} seconds",
