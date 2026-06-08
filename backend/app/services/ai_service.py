@@ -1,8 +1,11 @@
 """Mock AI service that simulates an AI coding assistant."""
 
+import logging
 import random
 
 from app.models.schemas import ChatMessage
+
+logger = logging.getLogger("ai_coder.ai_service")
 
 # Predefined responses for different types of requests
 CODE_RESPONSES = {
@@ -29,7 +32,7 @@ CODE_RESPONSES = {
         "    return fib\n\n\n"
         'if __name__ == "__main__":\n'
         '    print(greet("Developer"))\n'
-        "    print(f\"Fibonacci(10): {fibonacci(10)}\")\n"
+        '    print(f"Fibonacci(10): {fibonacci(10)}")\n'
         "```\n\n"
         "I've saved this to `main.py`. You can run it in the terminal with `python main.py`.",
         "files_changed": ["main.py"],
@@ -41,7 +44,7 @@ CODE_RESPONSES = {
         "export function Counter({ initialValue = 0 }: CounterProps) {\n"
         "  const [count, setCount] = useState(initialValue);\n\n"
         "  return (\n"
-        "    <div className=\"flex items-center gap-4 p-4\">\n"
+        '    <div className="flex items-center gap-4 p-4">\n'
         "      <button\n"
         "        onClick={() => setCount(c => c - 1)}\n"
         '        className="px-3 py-1 bg-red-500 text-white rounded"\n'
@@ -60,21 +63,21 @@ CODE_RESPONSES = {
         "```python\nfrom fastapi import FastAPI, HTTPException\nfrom pydantic import BaseModel\n\n"
         "app = FastAPI()\n\n"
         "class Item(BaseModel):\n    name: str\n    price: float\n"
-        "    description: str = \"\"\n\n"
+        '    description: str = ""\n\n'
         "items: dict[int, Item] = {}\n"
         "next_id = 1\n\n\n"
-        "@app.post(\"/items\", status_code=201)\n"
+        '@app.post("/items", status_code=201)\n'
         "def create_item(item: Item):\n"
         "    global next_id\n"
         "    items[next_id] = item\n"
-        "    result = {\"id\": next_id, **item.model_dump()}\n"
+        '    result = {"id": next_id, **item.model_dump()}\n'
         "    next_id += 1\n"
         "    return result\n\n\n"
-        "@app.get(\"/items/{item_id}\")\n"
+        '@app.get("/items/{item_id}")\n'
         "def get_item(item_id: int):\n"
         "    if item_id not in items:\n"
-        "        raise HTTPException(404, \"Item not found\")\n"
-        "    return {\"id\": item_id, **items[item_id].model_dump()}\n```\n\n"
+        '        raise HTTPException(404, "Item not found")\n'
+        '    return {"id": item_id, **items[item_id].model_dump()}\n```\n\n'
         "I've saved this to `api.py`. Run with `uvicorn api:app --reload`.",
         "files_changed": ["api.py"],
     },
@@ -118,6 +121,7 @@ def detect_intent(message: str) -> str:
 def generate_response(message: str, history: list[ChatMessage]) -> dict:
     """Generate a mock AI response based on the user's message."""
     intent = detect_intent(message)
+    logger.info("Generating response for intent=%s (history_len=%d)", intent, len(history))
 
     if intent in CODE_RESPONSES:
         resp = CODE_RESPONSES[intent]
