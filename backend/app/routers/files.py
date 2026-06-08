@@ -1,9 +1,13 @@
+import logging
 import os
 
 from fastapi import APIRouter, HTTPException
 
+from app.core.security import validate_path
 from app.models.schemas import FileContent, FileNode, FileWriteRequest
 from app.services.executor_service import get_workspace_dir
+
+logger = logging.getLogger("ai_coder.files")
 
 router = APIRouter(prefix="/api/files", tags=["files"])
 
@@ -68,7 +72,8 @@ async def get_file_tree() -> list[FileNode]:
 async def get_file_content(path: str) -> FileContent:
     """Read file content by path."""
     workspace = get_workspace_dir()
-    full_path = os.path.join(workspace, path.lstrip("/"))
+    full_path = validate_path(workspace, path)
+    logger.info("Reading file: %s", path)
 
     if not os.path.isfile(full_path):
         raise HTTPException(status_code=404, detail=f"File not found: {path}")
@@ -77,7 +82,7 @@ async def get_file_content(path: str) -> FileContent:
         with open(full_path) as f:
             content = f.read()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     ext = os.path.splitext(path)[1]
     language = LANGUAGE_MAP.get(ext, "plaintext")
@@ -89,7 +94,8 @@ async def get_file_content(path: str) -> FileContent:
 async def write_file(request: FileWriteRequest) -> dict:
     """Write content to a file."""
     workspace = get_workspace_dir()
-    full_path = os.path.join(workspace, request.path.lstrip("/"))
+    full_path = validate_path(workspace, request.path)
+    logger.info("Writing file: %s", request.path)
 
     os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
@@ -97,6 +103,6 @@ async def write_file(request: FileWriteRequest) -> dict:
         with open(full_path, "w") as f:
             f.write(request.content)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     return {"status": "ok", "path": request.path}

@@ -1,12 +1,13 @@
 """Service for executing commands in a sandboxed environment."""
 
 import asyncio
+import logging
 import os
-import tempfile
 
-# Workspace directory for user files
-WORKSPACE_DIR = os.path.join(tempfile.gettempdir(), "ai-coder-workspace")
-os.makedirs(WORKSPACE_DIR, exist_ok=True)
+from app.core.config import get_settings
+from app.core.security import validate_command, validate_path
+
+logger = logging.getLogger("ai_coder.executor_service")
 
 # Pre-populate workspace with sample files
 SAMPLE_FILES = {
@@ -41,10 +42,16 @@ SAMPLE_FILES = {
 }
 
 
+def get_workspace_dir() -> str:
+    return get_settings().workspace_dir
+
+
 def init_workspace() -> None:
     """Initialize workspace with sample files."""
+    workspace_dir = get_workspace_dir()
+    os.makedirs(workspace_dir, exist_ok=True)
     for rel_path, content in SAMPLE_FILES.items():
-        full_path = os.path.join(WORKSPACE_DIR, rel_path)
+        full_path = os.path.join(workspace_dir, rel_path)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
         if not os.path.exists(full_path):
             with open(full_path, "w") as f:
@@ -56,9 +63,15 @@ init_workspace()
 
 async def execute_command(command: str, cwd: str = "/") -> dict:
     """Execute a command and return stdout, stderr, exit_code."""
-    work_dir = os.path.join(WORKSPACE_DIR, cwd.lstrip("/"))
+    settings = get_settings()
+    validate_command(command, settings.command_blacklist)
+
+    workspace_dir = settings.workspace_dir
+    work_dir = validate_path(workspace_dir, cwd)
     if not os.path.isdir(work_dir):
-        work_dir = WORKSPACE_DIR
+        work_dir = workspace_dir
+
+    logger.info("Executing command: %s (cwd=%s)", command, work_dir)
 
     try:
         proc = await asyncio.create_subprocess_shell(
@@ -67,25 +80,29 @@ async def execute_command(command: str, cwd: str = "/") -> dict:
             stderr=asyncio.subprocess.PIPE,
             cwd=work_dir,
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
-        return {
+        stdout, stderr = await asyncio.wait_for(
+            proc.communicate(), timeout=settings.command_timeout
+        )
+        result = {
             "stdout": stdout.decode(errors="replace"),
             "stderr": stderr.decode(errors="replace"),
             "exit_code": proc.returncode or 0,
         }
-    except asyncio.TimeoutError:
+        logger.info("Command finished with exit_code=%d", result["exit_code"])
+        return result
+    except TimeoutError:
+        logger.error("Command timed out after %d seconds: %s", settings.command_timeout, command)
+        proc.kill()
+        await proc.wait()
         return {
             "stdout": "",
-            "stderr": "Command timed out after 30 seconds",
+            "stderr": f"Command timed out after {settings.command_timeout} seconds",
             "exit_code": 124,
         }
     except Exception as e:
+        logger.error("Command execution error: %s", e)
         return {
             "stdout": "",
             "stderr": str(e),
             "exit_code": 1,
         }
-
-
-def get_workspace_dir() -> str:
-    return WORKSPACE_DIR
