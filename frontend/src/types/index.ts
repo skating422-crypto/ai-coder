@@ -55,3 +55,21 @@ export interface GitCommitResult {
   committed: boolean;
   detail: string;
 }
+
+export interface GitCommit {
+  hash: string;
+  short_hash: string;
+  author: string;
+  date: string;
+  subject: string;
+}
+
+export interface GitLog {
+  initialized: boolean;
+  commits: GitCommit[];
+}
+
+export interface GitShow {
+  ref: string;
+  diff: string;
+}

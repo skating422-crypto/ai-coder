@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import (
+    GitCommit,
     GitCommitRequest,
     GitCommitResponse,
     GitDiffResponse,
+    GitLogResponse,
+    GitShowResponse,
     GitStatusEntry,
     GitStatusResponse,
 )
@@ -42,6 +45,26 @@ async def diff(path: str = "") -> GitDiffResponse:
     """Get the diff for the workspace or a single file."""
     text = await git_service.get_diff(path)
     return GitDiffResponse(path=path, diff=text)
+
+
+@router.get("/log", response_model=GitLogResponse)
+async def log(limit: int = 50) -> GitLogResponse:
+    """Return the recent commit history for the workspace."""
+    initialized = git_service.is_initialized()
+    commits = await git_service.get_log(limit)
+    return GitLogResponse(
+        initialized=initialized,
+        commits=[GitCommit(**c) for c in commits],
+    )
+
+
+@router.get("/show", response_model=GitShowResponse)
+async def show(ref: str) -> GitShowResponse:
+    """Return the patch for a single commit."""
+    if not ref.strip():
+        raise HTTPException(status_code=400, detail="ref is required")
+    text = await git_service.get_commit_diff(ref)
+    return GitShowResponse(ref=ref, diff=text)
 
 
 @router.post("/commit", response_model=GitCommitResponse)
