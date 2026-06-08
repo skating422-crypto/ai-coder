@@ -5,6 +5,8 @@ import type {
   FileNode,
   GitCommitResult,
   GitDiff,
+  GitLog,
+  GitShow,
   GitStatus,
   SearchResponse,
 } from "../types";
@@ -102,6 +104,14 @@ export async function gitCommit(message: string): Promise<GitCommitResult> {
     method: "POST",
     body: JSON.stringify({ message }),
   });
+}
+
+export async function getGitLog(): Promise<GitLog> {
+  return request<GitLog>("/git/log");
+}
+
+export async function getCommitDiff(ref: string): Promise<GitShow> {
+  return request<GitShow>(`/git/show?ref=${encodeURIComponent(ref)}`);
 }
 
 export interface StreamCallbacks {

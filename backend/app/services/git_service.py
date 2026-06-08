@@ -93,6 +93,53 @@ async def get_diff(path: str = "") -> str:
     return out
 
 
+async def get_log(limit: int = 50) -> list[dict]:
+    """Return recent commits as a list of dicts.
+
+    Each entry has: hash, short_hash, author, date (relative), and subject.
+    """
+    if not is_initialized():
+        return []
+
+    # Use field/record separators that won't appear in commit metadata.
+    fmt = "%H%x1f%h%x1f%an%x1f%ar%x1f%s%x1e"
+    code, out, _err = await _run_git(
+        "log", f"--pretty=format:{fmt}", "-n", str(limit)
+    )
+    if code != 0 or not out.strip():
+        return []
+
+    commits: list[dict] = []
+    for record in out.split("\x1e"):
+        record = record.strip("\n")
+        if not record:
+            continue
+        parts = record.split("\x1f")
+        if len(parts) != 5:
+            continue
+        full, short, author, date, subject = parts
+        commits.append(
+            {
+                "hash": full,
+                "short_hash": short,
+                "author": author,
+                "date": date,
+                "subject": subject,
+            }
+        )
+    return commits
+
+
+async def get_commit_diff(ref: str) -> str:
+    """Return the patch for a single commit."""
+    if not is_initialized() or not ref:
+        return ""
+    code, out, _err = await _run_git("show", "--stat", "--patch", ref)
+    if code != 0:
+        return ""
+    return out
+
+
 async def commit_all(message: str) -> tuple[bool, str]:
     """Stage all changes and create a commit."""
     if not is_initialized():

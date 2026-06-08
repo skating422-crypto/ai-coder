@@ -88,6 +88,24 @@ class GitDiffResponse(BaseModel):
     diff: str
 
 
+class GitCommit(BaseModel):
+    hash: str
+    short_hash: str
+    author: str
+    date: str
+    subject: str
+
+
+class GitLogResponse(BaseModel):
+    initialized: bool
+    commits: list[GitCommit] = []
+
+
+class GitShowResponse(BaseModel):
+    ref: str
+    diff: str
+
+
 class GitCommitRequest(BaseModel):
     message: str
 

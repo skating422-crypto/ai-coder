@@ -15,7 +15,9 @@ An AI-powered coding assistant — a web-based IDE with chat, file management, c
 - 📁 Virtual file system with project tree
 - 🗂️ File management — create, rename, and delete files & folders
 - 🔍 Global workspace search across file contents
-- 🌿 Git integration — init, status, diff, and commit in the workspace
+- 🌿 Git integration — init, status, diff, commit, and commit history in the workspace
+- 📑 Multi-tab editor — open several files at once, with `Ctrl+S` to save
+- ⚡ Command palette — `Ctrl+P` to fuzzy-find and quick-open files
 - ✏️ Code editor with syntax highlighting
 - 🖥️ Terminal emulator for command execution
 
@@ -73,6 +75,8 @@ ai-coder/
 - `GET  /api/git/status` — workspace git status
 - `POST /api/git/init` — initialize a git repo
 - `GET  /api/git/diff` — diff for the workspace or a file
+- `GET  /api/git/log` — recent commit history
+- `GET  /api/git/show` — patch for a single commit
 - `POST /api/git/commit` — stage all and commit
 - `POST /api/execute` — run a shell command
 
