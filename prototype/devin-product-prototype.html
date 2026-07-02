@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devin 产品线原型 — Cloud + IDE 客户端</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --green:#3fb950;
+    --yellow:#d29922; --red:#f85149; --purple:#a371f7; --cyan:#39c5cf;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"SF Pro","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .titlebar{height:38px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .titlebar .title{font-size:13px;color:var(--muted);margin-left:8px}
+  .titlebar .tabs{margin-left:auto;display:flex;gap:6px}
+  .ttab{font-size:12px;padding:4px 12px;border-radius:6px;cursor:pointer;color:var(--muted);border:1px solid transparent}
+  .ttab.active{background:var(--panel2);color:var(--text);border-color:var(--border)}
+  .main{flex:1;display:flex;min-height:0}
+  /* sidebar */
+  .sidebar{width:230px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+  .side-section{padding:10px 12px;border-bottom:1px solid var(--border)}
+  .side-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+  .tree{font-size:13px;line-height:1.9}
+  .tree .dir{color:var(--cyan)}
+  .tree .file{color:var(--text);padding-left:16px;cursor:pointer}
+  .tree .file.new{color:var(--green)}
+  .tree .file.new::after{content:" ● 新拉取";font-size:10px;color:var(--green)}
+  .session-item{font-size:12px;padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;background:var(--panel2)}
+  .session-item .st{font-size:11px;margin-top:3px}
+  /* center */
+  .center{flex:1;display:flex;flex-direction:column;min-width:0}
+  .editor{flex:1;background:var(--bg);padding:14px 18px;overflow:auto;font-family:"SF Mono",Consolas,monospace;font-size:13px;line-height:1.7;white-space:pre;color:#c9d1d9}
+  .editor .kw{color:#ff7b72}.editor .fn{color:#d2a8ff}.editor .str{color:#a5d6ff}.editor .cm{color:#8b949e}
+  .terminal{height:200px;background:#010409;border-top:1px solid var(--border);padding:10px 14px;overflow:auto;font-family:"SF Mono",Consolas,monospace;font-size:12px;line-height:1.6;flex-shrink:0}
+  .terminal .prompt{color:var(--green)}
+  .terminal .out{color:var(--muted)}
+  .terminal .ok{color:var(--green)}
+  /* chat panel */
+  .chat{width:400px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+  .chat-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  .chat-header .logo{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+  .chat-body{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:92%;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.6}
+  .msg.user{align-self:flex-end;background:var(--accent);color:#fff}
+  .msg.agent{align-self:flex-start;background:var(--panel2);border:1px solid var(--border)}
+  .msg .tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;margin-bottom:6px}
+  .tag.local{background:rgba(63,185,80,.15);color:var(--green);border:1px solid var(--green)}
+  .tag.remote{background:rgba(163,113,247,.15);color:var(--purple);border:1px solid var(--purple)}
+  /* remote task card */
+  .task-card{align-self:stretch;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px}
+  .task-card h4{font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+  .badge.running{background:rgba(210,153,34,.15);color:var(--yellow);border:1px solid var(--yellow)}
+  .badge.done{background:rgba(63,185,80,.15);color:var(--green);border:1px solid var(--green)}
+  .badge.queued{background:rgba(139,148,158,.15);color:var(--muted);border:1px solid var(--muted)}
+  .progress{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0}
+  .progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));width:0%;transition:width .5s}
+  .steps{list-style:none;margin-top:6px}
+  .steps li{padding:3px 0;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .steps li.doing{color:var(--yellow)}
+  .steps li.done{color:var(--green)}
+  .steps li .ico{width:14px;text-align:center}
+  .task-actions{display:flex;gap:8px;margin-top:10px}
+  .btn{border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.green{background:var(--green);border-color:var(--green);color:#04260f}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  /* input area */
+  .chat-input{border-top:1px solid var(--border);padding:12px}
+  .mode-row{display:flex;gap:8px;margin-bottom:10px}
+  .mode{flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;background:var(--panel2)}
+  .mode small{display:block;color:var(--muted);margin-top:2px;font-size:11px}
+  .mode.sel-local{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+  .mode.sel-remote{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple)}
+  .input-row{display:flex;gap:8px}
+  textarea{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:9px 11px;resize:none;height:60px;font-family:inherit}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  /* cloud page */
+  .page{flex:1;display:none;overflow:auto;padding:24px 28px}
+  .page.active{display:block}
+  .main-wrap{flex:1;display:flex;min-height:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .card h3{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .card p,.card li{font-size:12.5px;color:var(--muted);line-height:1.7}
+  .card ul{padding-left:18px}
+  h2.pagetitle{font-size:18px}
+  .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left}
+  th{background:var(--panel2)}
+  td{color:var(--muted)}
+  .offline-form{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  select,input[type=text]{background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:7px 10px}
+  .queue-item{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12.5px}
+  .queue-item .grow{flex:1}
+  .queue-item .type{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(57,197,207,.15);color:var(--cyan);border:1px solid var(--cyan)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--green);color:var(--green);padding:10px 18px;border-radius:8px;font-size:13px;display:none;z-index:99}
+</style>
+</head>
+<body>
+  <div class="titlebar">
+    <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+    <span class="title">Devin Desktop — ai-coder 工作区（原型演示）</span>
+    <div class="tabs">
+      <div class="ttab active" data-page="ide" onclick="switchPage('ide')">🖥️ IDE 客户端</div>
+      <div class="ttab" data-page="cloud" onclick="switchPage('cloud')">☁️ Devin Cloud 控制台</div>
+      <div class="ttab" data-page="product" onclick="switchPage('product')">📦 产品线全景</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- ============ IDE PAGE ============ -->
+    <div class="main-wrap page active" id="page-ide">
+      <div class="sidebar">
+        <div class="side-section">
+          <div class="side-title">资源管理器 · ai-coder</div>
+          <div class="tree" id="fileTree">
+            <div class="dir">▾ backend/app</div>
+            <div class="file">main.py</div>
+            <div class="file">routers/chat.py</div>
+            <div class="dir">▾ frontend/src</div>
+            <div class="file">App.tsx</div>
+            <div class="file">api.ts</div>
+          </div>
+        </div>
+        <div class="side-section" style="flex:1;overflow:auto">
+          <div class="side-title">Devin 会话（本地 + 云端）</div>
+          <div id="sessionList">
+            <div class="session-item"><b>💻 本地会话</b><div class="st" style="color:var(--green)">● 就绪 — Devin Local</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="center">
+        <div class="editor" id="editor"><span class="cm"># backend/app/routers/chat.py — 在左侧点击文件查看</span>
+
+<span class="kw">from</span> fastapi <span class="kw">import</span> APIRouter
+router = APIRouter()
+
+<span class="kw">@router.post</span>(<span class="str">"/chat"</span>)
+<span class="kw">async def</span> <span class="fn">chat</span>(req: ChatRequest):
+    <span class="cm"># TODO: 支持流式输出</span>
+    <span class="kw">return</span> {<span class="str">"reply"</span>: <span class="str">"..."</span>}</div>
+        <div class="terminal" id="terminal"><span class="prompt">dev@local:~/ai-coder$</span> <span class="out">终端就绪。远端任务完成后可「拉回本地」并在此执行。</span></div>
+      </div>
+
+      <div class="chat">
+        <div class="chat-header">
+          <div class="logo">D</div>
+          <div><b style="font-size:13px">Devin Agent</b><div style="font-size:11px;color:var(--muted)">本地执行 · 或一键交给云端 Devin</div></div>
+        </div>
+        <div class="chat-body" id="chatBody">
+          <div class="msg agent">👋 你好！我是 Devin。请输入任务，并选择在 <b style="color:var(--green)">本地</b>（当前机器，快速小改动）还是 <b style="color:var(--purple)">远端云端</b>（独立云端 VM，可长时间自主运行、并行多任务、离线执行）完成。</div>
+        </div>
+        <div class="chat-input">
+          <div class="mode-row">
+            <div class="mode sel-local" id="modeLocal" onclick="setMode('local')">💻 <b>本地执行</b><small>Devin Local · 在本机直接改代码</small></div>
+            <div class="mode" id="modeRemote" onclick="setMode('remote')">☁️ <b>远端执行</b><small>Cloud Devin · 云端 VM 自主完成</small></div>
+          </div>
+          <div class="input-row">
+            <textarea id="chatInput" placeholder="例如：给 /chat 接口增加 SSE 流式输出，并补充单元测试">给 /chat 接口增加 SSE 流式输出，并补充单元测试</textarea>
+            <button class="btn primary" style="height:60px" onclick="sendTask()">发送 ➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CLOUD PAGE ============ -->
+    <div class="page" id="page-cloud">
+      <h2 class="pagetitle">☁️ Devin Cloud 控制台</h2>
+      <div class="sub">云端会话与离线任务队列 — 每个会话运行在独立云端 VM 上，关掉客户端也会继续执行</div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>📋 离线任务队列（无需客户端在线）</h3>
+        <p>支持定时任务（Schedules）、事件触发自动化（Automations）、批量并行子会话（Batch Sessions）、CI 修复、依赖升级、PR Review 等。</p>
+        <div class="offline-form">
+          <select id="offlineType">
+            <option>🕑 定时任务（每天）</option>
+            <option>⚡ 事件触发（PR 创建时）</option>
+            <option>🧩 批量并行会话</option>
+            <option>🔧 CI 失败自动修复</option>
+          </select>
+          <input type="text" id="offlineDesc" size="42" value="每天凌晨升级依赖并跑全量测试，失败自动修复">
+          <button class="btn primary" onclick="addOfflineTask()">＋ 添加离线任务</button>
+        </div>
+        <div id="offlineQueue">
+          <div class="queue-item"><span class="type">⚡ 事件触发</span><span class="grow">每个新 PR 自动执行 Devin Review 代码审查</span><span class="badge done">已启用</span></div>
+          <div class="queue-item"><span class="type">🕑 定时任务</span><span class="grow">每周一自动刷新 Devin Wiki 仓库文档</span><span class="badge done">已启用</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>🖥️ 云端会话（与 IDE 客户端实时同步）</h3>
+        <p>下面列表与 IDE 客户端左侧「Devin 会话」面板保持同步。在 IDE 里发起的远端任务会出现在这里。</p>
+        <div id="cloudSessionList"><p style="margin-top:8px">暂无云端会话 — 回到 IDE 客户端，选择「远端执行」发起一个任务试试。</p></div>
+      </div>
+    </div>
+
+    <!-- ============ PRODUCT PAGE ============ -->
+    <div class="page" id="page-product">
+      <h2 class="pagetitle">📦 Devin 产品线全景（调研整理）</h2>
+      <div class="sub">Cognition AI 的 Devin 生态：云端自主工程师 + 本地 IDE/CLI 客户端 + API 平台</div>
+      <div class="grid">
+        <div class="card"><h3>☁️ Devin Cloud（app.devin.ai）</h3><ul>
+          <li>云端会话：每个任务独立云端 VM（shell / 浏览器 / 编辑器），可长时间自主运行</li>
+          <li>无限并行：批量子会话拆解大型任务（如上万文件的框架升级）</li>
+          <li>Devin Wiki：自动生成并定期刷新仓库文档</li>
+          <li>Devin Search / Ask Devin：面向代码库的深度问答</li>
+          <li>Devin Review：PR 自动代码审查</li>
+          <li>Knowledge / Playbooks：沉淀团队知识与可复用任务流程</li>
+          <li>Automations & Schedules：定时 / 事件触发的离线任务</li>
+          <li>环境蓝图 + 快照：声明式开发环境，秒级启动</li></ul></div>
+        <div class="card"><h3>🖥️ Devin Desktop / IDE 客户端</h3><ul>
+          <li>基于 VS Code 界面的桌面 IDE，内置 Devin Local 智能体面板</li>
+          <li>聊天、写码、跑码一体；支持 Open VSX 扩展市场</li>
+          <li>本地任务：直接修改本机工作区，适合快速迭代</li>
+          <li>远端接力：一键把任务交给 Cloud Devin，本地实时看进度</li>
+          <li>任务完成后拉回代码到本地继续开发 / 执行</li></ul></div>
+        <div class="card"><h3>⌨️ Devin CLI</h3><ul>
+          <li>命令行本地编码智能体，终端内直接对话改码</li>
+          <li>支持把任务 hand off 给云端 Devin 继续执行</li>
+          <li>适合脚本化 / SSH 远程 / 无 GUI 场景</li></ul></div>
+        <div class="card"><h3>🔌 API 与集成</h3><ul>
+          <li>Devin API：编程式创建会话、获取结构化结果，接入 CI/CD</li>
+          <li>服务账号 + RBAC，安全可审计</li>
+          <li>Slack / Jira / Linear / GitHub 集成：@Devin 直接派任务</li>
+          <li>MCP：连接外部工具与数据源</li></ul></div>
+      </div>
+      <table>
+        <tr><th>维度</th><th>💻 本地（Desktop/CLI）</th><th>☁️ 远端（Cloud）</th></tr>
+        <tr><td>运行位置</td><td>用户本机工作区</td><td>独立云端 VM（环境快照秒启）</td></tr>
+        <tr><td>适合任务</td><td>快速小改动、实时结对</td><td>长耗时、自主、多并行、离线任务</td></tr>
+        <tr><td>客户端关闭后</td><td>停止</td><td>继续运行，进度可随时回看</td></tr>
+        <tr><td>产出交付</td><td>直接写入本地文件</td><td>PR / 分支，可拉回本地执行</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+let mode = 'local';
+let sessionSeq = 0;
+
+function switchPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.ttab').forEach(e=>e.classList.toggle('active', e.dataset.page===p));
+}
+function setMode(m){
+  mode = m;
+  document.getElementById('modeLocal').className = 'mode' + (m==='local' ? ' sel-local' : '');
+  document.getElementById('modeRemote').className = 'mode' + (m==='remote' ? ' sel-remote' : '');
+}
+function toast(t){
+  const el = document.getElementById('toast');
+  el.textContent = t; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3000);
+}
+function addMsg(html, cls){
+  const el = document.createElement('div');
+  el.className = 'msg ' + cls;
+  el.innerHTML = html;
+  document.getElementById('chatBody').appendChild(el);
+  el.scrollIntoView({behavior:'smooth'});
+  return el;
+}
+function term(html){
+  const t = document.getElementById('terminal');
+  t.innerHTML += '\n' + html;
+  t.scrollTop = t.scrollHeight;
+}
+
+function sendTask(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  addMsg('<span class="tag '+(mode==='local'?'local">💻 本地任务':'remote">☁️ 远端任务')+'</span><br>'+text, 'user');
+  input.value = '';
+  if(mode==='local') runLocal(text); else runRemote(text);
+}
+
+/* ---------- local ---------- */
+function runLocal(text){
+  const m = addMsg('<span class="tag local">💻 Devin Local</span><br>正在分析本地工作区…', 'agent');
+  setTimeout(()=>{ m.innerHTML += '<br>✏️ 修改 <code>backend/app/routers/chat.py</code>（+18 行 / -3 行）'; }, 1200);
+  setTimeout(()=>{ m.innerHTML += '<br>🧪 运行 <code>pytest backend/tests</code> … <b style="color:var(--green)">4 passed</b>'; term('<span class="prompt">dev@local:~/ai-coder$</span> pytest backend/tests -q\n<span class="ok">.... 4 passed in 1.2s</span>'); }, 2600);
+  setTimeout(()=>{ m.innerHTML += '<br>✅ <b style="color:var(--green)">本地任务完成</b>，代码已直接写入本机工作区。'; }, 3800);
+}
+
+/* ---------- remote ---------- */
+const STEPS = ['创建云端 VM（环境快照秒启）','克隆仓库 & 恢复依赖','制定计划并修改代码','运行测试 & Lint','推送分支并创建 PR'];
+function runRemote(text){
+  sessionSeq++;
+  const id = 'cs' + sessionSeq;
+  const name = '☁️ 云端会话 #' + sessionSeq;
+
+  // sidebar session entry
+  const side = document.createElement('div');
+  side.className = 'session-item';
+  side.id = 'side-' + id;
+  side.innerHTML = '<b>'+name+'</b><div class="st" style="color:var(--yellow)">● 运行中 0%</div>';
+  document.getElementById('sessionList').appendChild(side);
+
+  // cloud console entry
+  const cl = document.getElementById('cloudSessionList');
+  if(cl.querySelector('p')) cl.innerHTML = '';
+  const cItem = document.createElement('div');
+  cItem.className = 'queue-item';
+  cItem.id = 'cloud-' + id;
+  cItem.innerHTML = '<span class="type">☁️ 云端会话</span><span class="grow">'+text+'</span><span class="badge running">运行中</span>';
+  cl.appendChild(cItem);
+
+  // chat task card with live progress
+  const card = document.createElement('div');
+  card.className = 'task-card';
+  card.innerHTML = '<h4>'+name+' <span class="badge running" id="badge-'+id+'">运行中</span></h4>'
+    + '<div style="color:var(--muted)">'+text+'</div>'
+    + '<div class="progress"><div id="bar-'+id+'"></div></div>'
+    + '<ul class="steps" id="steps-'+id+'">' + STEPS.map(s=>'<li><span class="ico">○</span>'+s+'</li>').join('') + '</ul>'
+    + '<div class="task-actions">'
+    + '<button class="btn green" id="pull-'+id+'" disabled onclick="pullCode(\''+id+'\')">⬇ 拉回本地</button>'
+    + '<button class="btn" id="run-'+id+'" disabled onclick="runLocalExec(\''+id+'\')">▶ 本地执行</button>'
+    + '<button class="btn" onclick="switchPage(\'cloud\')">查看云端控制台</button></div>';
+  document.getElementById('chatBody').appendChild(card);
+  card.scrollIntoView({behavior:'smooth'});
+
+  addMsg('<span class="tag remote">☁️ Cloud Devin</span><br>已在云端 VM 启动会话，关闭客户端也会继续运行。下方实时同步进度 👇', 'agent');
+
+  let step = 0;
+  const lis = card.querySelectorAll('#steps-'+id+' li');
+  const tick = setInterval(()=>{
+    if(step > 0){ lis[step-1].className='done'; lis[step-1].querySelector('.ico').textContent='✔'; }
+    if(step < STEPS.length){
+      lis[step].className='doing'; lis[step].querySelector('.ico').textContent='◉';
+      const pct = Math.round((step+0.5)/STEPS.length*100);
+      document.getElementById('bar-'+id).style.width = pct+'%';
+      side.querySelector('.st').textContent = '● 运行中 '+pct+'% — '+STEPS[step];
+      step++;
+    } else {
+      clearInterval(tick);
+      document.getElementById('bar-'+id).style.width = '100%';
+      document.getElementById('badge-'+id).className='badge done';
+      document.getElementById('badge-'+id).textContent='已完成 · PR #128';
+      side.querySelector('.st').innerHTML = '<span style="color:var(--green)">● 已完成 · PR #128</span>';
+      cItem.querySelector('.badge').className='badge done';
+      cItem.querySelector('.badge').textContent='已完成';
+      document.getElementById('pull-'+id).disabled = false;
+      addMsg('<span class="tag remote">☁️ Cloud Devin</span><br>✅ 远端任务完成！已创建 <b>PR #128（devin/sse-streaming）</b>，CI 全绿。点击任务卡片上的「⬇ 拉回本地」把代码同步到本机。', 'agent');
+      toast('☁️ 云端会话 #'+sessionSeq+' 已完成');
+    }
+  }, 1600);
+}
+
+function pullCode(id){
+  document.getElementById('pull-'+id).disabled = true;
+  term('<span class="prompt">dev@local:~/ai-coder$</span> git fetch origin devin/sse-streaming && git checkout devin/sse-streaming\n<span class="out">remote: Enumerating objects: 12, done.</span>\n<span class="ok">切换到分支 devin/sse-streaming — 2 个文件已更新</span>');
+  const tree = document.getElementById('fileTree');
+  const f1 = document.createElement('div'); f1.className='file new'; f1.textContent='routers/chat_stream.py';
+  const f2 = document.createElement('div'); f2.className='file new'; f2.textContent='tests/test_chat_stream.py';
+  tree.appendChild(f1); tree.appendChild(f2);
+  document.getElementById('editor').innerHTML =
+'<span class="cm"># routers/chat_stream.py — 从云端拉回的新代码</span>\n\n<span class="kw">from</span> fastapi.responses <span class="kw">import</span> StreamingResponse\n\n<span class="kw">@router.post</span>(<span class="str">"/chat/stream"</span>)\n<span class="kw">async def</span> <span class="fn">chat_stream</span>(req: ChatRequest):\n    <span class="kw">async def</span> <span class="fn">gen</span>():\n        <span class="kw">async for</span> chunk <span class="kw">in</span> llm.stream(req.messages):\n            <span class="kw">yield</span> <span class="str">f"data: {chunk}\\n\\n"</span>\n    <span class="kw">return</span> StreamingResponse(gen(), media_type=<span class="str">"text/event-stream"</span>)';
+  document.getElementById('run-'+id).disabled = false;
+  addMsg('<span class="tag local">💻 本地</span><br>⬇ 代码已拉回本地（分支 <code>devin/sse-streaming</code>），左侧文件树新增 2 个文件。现在可以点「▶ 本地执行」运行。', 'agent');
+  toast('⬇ 代码已拉回本地工作区');
+}
+
+function runLocalExec(id){
+  document.getElementById('run-'+id).disabled = true;
+  term('<span class="prompt">dev@local:~/ai-coder$</span> pytest backend/tests/test_chat_stream.py -q');
+  setTimeout(()=>term('<span class="ok">...... 6 passed in 1.8s</span>'), 900);
+  setTimeout(()=>term('<span class="prompt">dev@local:~/ai-coder$</span> uvicorn app.main:app --port 8000\n<span class="ok">INFO: Uvicorn running on http://127.0.0.1:8000 — SSE 流式接口已生效 ✔</span>'), 1800);
+  setTimeout(()=>{ addMsg('<span class="tag local">💻 本地</span><br>▶ 本地执行成功：6 个测试全部通过，服务已在 <code>:8000</code> 启动，SSE 流式输出生效。远端 → 本地闭环完成 🎉', 'agent'); toast('▶ 本地执行成功'); }, 2600);
+}
+
+function addOfflineTask(){
+  const type = document.getElementById('offlineType').value;
+  const desc = document.getElementById('offlineDesc').value.trim() || '（未填写描述）';
+  const el = document.createElement('div');
+  el.className = 'queue-item';
+  el.innerHTML = '<span class="type">'+type.split('（')[0]+'</span><span class="grow">'+desc+'</span><span class="badge queued">排队中</span>';
+  document.getElementById('offlineQueue').appendChild(el);
+  setTimeout(()=>{ el.querySelector('.badge').className='badge done'; el.querySelector('.badge').textContent='已启用'; }, 2000);
+  toast('＋ 离线任务已加入云端队列（客户端可离线）');
+}
+
+document.getElementById('chatInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendTask(); }
+});
+</script>
+</body>
+</html>
