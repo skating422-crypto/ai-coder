@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Devin 产品线原型 — Cloud + IDE 客户端</title>
+<title>Code Agent 产品线原型 — Cloud + IDE 客户端</title>
 <style>
   :root{
     --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --border:#30363d;
@@ -107,10 +107,10 @@
 <body>
   <div class="titlebar">
     <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
-    <span class="title">Devin Desktop — ai-coder 工作区（原型演示）</span>
+    <span class="title">Code Agent Desktop — ai-coder 工作区（原型演示）</span>
     <div class="tabs">
       <div class="ttab active" data-page="ide" onclick="switchPage('ide')">🖥️ IDE 客户端</div>
-      <div class="ttab" data-page="cloud" onclick="switchPage('cloud')">☁️ Devin Cloud 控制台</div>
+      <div class="ttab" data-page="cloud" onclick="switchPage('cloud')">☁️ Code Agent Cloud 控制台</div>
       <div class="ttab" data-page="product" onclick="switchPage('product')">📦 产品线全景</div>
     </div>
   </div>
@@ -131,9 +131,9 @@
           </div>
         </div>
         <div class="side-section" style="flex:1;overflow:auto">
-          <div class="side-title">Devin 会话（本地 + 云端）</div>
+          <div class="side-title">Code Agent 会话（本地 + 云端）</div>
           <div id="sessionList">
-            <div class="session-item"><b>💻 本地会话</b><div class="st" style="color:var(--green)">● 就绪 — Devin Local</div></div>
+            <div class="session-item"><b>💻 本地会话</b><div class="st" style="color:var(--green)">● 就绪 — Code Agent Local</div></div>
           </div>
         </div>
       </div>
@@ -154,15 +154,15 @@ router = APIRouter()
       <div class="chat">
         <div class="chat-header">
           <div class="logo">D</div>
-          <div><b style="font-size:13px">Devin Agent</b><div style="font-size:11px;color:var(--muted)">本地执行 · 或一键交给云端 Devin</div></div>
+          <div><b style="font-size:13px">Code Agent</b><div style="font-size:11px;color:var(--muted)">本地执行 · 或一键交给云端 Agent</div></div>
         </div>
         <div class="chat-body" id="chatBody">
-          <div class="msg agent">👋 你好！我是 Devin。请输入任务，并选择在 <b style="color:var(--green)">本地</b>（当前机器，快速小改动）还是 <b style="color:var(--purple)">远端云端</b>（独立云端 VM，可长时间自主运行、并行多任务、离线执行）完成。</div>
+          <div class="msg agent">👋 你好！我是 Code Agent。请输入任务，并选择在 <b style="color:var(--green)">本地</b>（当前机器，快速小改动）还是 <b style="color:var(--purple)">远端云端</b>（独立云端 VM，可长时间自主运行、并行多任务、离线执行）完成。</div>
         </div>
         <div class="chat-input">
           <div class="mode-row">
-            <div class="mode sel-local" id="modeLocal" onclick="setMode('local')">💻 <b>本地执行</b><small>Devin Local · 在本机直接改代码</small></div>
-            <div class="mode" id="modeRemote" onclick="setMode('remote')">☁️ <b>远端执行</b><small>Cloud Devin · 云端 VM 自主完成</small></div>
+            <div class="mode sel-local" id="modeLocal" onclick="setMode('local')">💻 <b>本地执行</b><small>Code Agent Local · 在本机直接改代码</small></div>
+            <div class="mode" id="modeRemote" onclick="setMode('remote')">☁️ <b>远端执行</b><small>Cloud Agent · 云端 VM 自主完成</small></div>
           </div>
           <div class="input-row">
             <textarea id="chatInput" placeholder="例如：给 /chat 接口增加 SSE 流式输出，并补充单元测试">给 /chat 接口增加 SSE 流式输出，并补充单元测试</textarea>
@@ -174,7 +174,7 @@ router = APIRouter()
 
     <!-- ============ CLOUD PAGE ============ -->
     <div class="page" id="page-cloud">
-      <h2 class="pagetitle">☁️ Devin Cloud 控制台</h2>
+      <h2 class="pagetitle">☁️ Code Agent Cloud 控制台</h2>
       <div class="sub">云端会话与离线任务队列 — 每个会话运行在独立云端 VM 上，关掉客户端也会继续执行</div>
 
       <div class="card" style="margin-top:16px">
@@ -191,46 +191,46 @@ router = APIRouter()
           <button class="btn primary" onclick="addOfflineTask()">＋ 添加离线任务</button>
         </div>
         <div id="offlineQueue">
-          <div class="queue-item"><span class="type">⚡ 事件触发</span><span class="grow">每个新 PR 自动执行 Devin Review 代码审查</span><span class="badge done">已启用</span></div>
-          <div class="queue-item"><span class="type">🕑 定时任务</span><span class="grow">每周一自动刷新 Devin Wiki 仓库文档</span><span class="badge done">已启用</span></div>
+          <div class="queue-item"><span class="type">⚡ 事件触发</span><span class="grow">每个新 PR 自动执行 Code Agent Review 代码审查</span><span class="badge done">已启用</span></div>
+          <div class="queue-item"><span class="type">🕑 定时任务</span><span class="grow">每周一自动刷新 Code Agent Wiki 仓库文档</span><span class="badge done">已启用</span></div>
         </div>
       </div>
 
       <div class="card" style="margin-top:16px">
         <h3>🖥️ 云端会话（与 IDE 客户端实时同步）</h3>
-        <p>下面列表与 IDE 客户端左侧「Devin 会话」面板保持同步。在 IDE 里发起的远端任务会出现在这里。</p>
+        <p>下面列表与 IDE 客户端左侧「Code Agent 会话」面板保持同步。在 IDE 里发起的远端任务会出现在这里。</p>
         <div id="cloudSessionList"><p style="margin-top:8px">暂无云端会话 — 回到 IDE 客户端，选择「远端执行」发起一个任务试试。</p></div>
       </div>
     </div>
 
     <!-- ============ PRODUCT PAGE ============ -->
     <div class="page" id="page-product">
-      <h2 class="pagetitle">📦 Devin 产品线全景（调研整理）</h2>
-      <div class="sub">Cognition AI 的 Devin 生态：云端自主工程师 + 本地 IDE/CLI 客户端 + API 平台</div>
+      <h2 class="pagetitle">📦 Code Agent 产品线全景（调研整理）</h2>
+      <div class="sub">Code Agent 生态：云端自主工程师 + 本地 IDE/CLI 客户端 + API 平台</div>
       <div class="grid">
-        <div class="card"><h3>☁️ Devin Cloud（app.devin.ai）</h3><ul>
+        <div class="card"><h3>☁️ Code Agent Cloud（云端控制台）</h3><ul>
           <li>云端会话：每个任务独立云端 VM（shell / 浏览器 / 编辑器），可长时间自主运行</li>
           <li>无限并行：批量子会话拆解大型任务（如上万文件的框架升级）</li>
-          <li>Devin Wiki：自动生成并定期刷新仓库文档</li>
-          <li>Devin Search / Ask Devin：面向代码库的深度问答</li>
-          <li>Devin Review：PR 自动代码审查</li>
+          <li>Code Agent Wiki：自动生成并定期刷新仓库文档</li>
+          <li>Code Agent Search / Ask Agent：面向代码库的深度问答</li>
+          <li>Code Agent Review：PR 自动代码审查</li>
           <li>Knowledge / Playbooks：沉淀团队知识与可复用任务流程</li>
           <li>Automations & Schedules：定时 / 事件触发的离线任务</li>
           <li>环境蓝图 + 快照：声明式开发环境，秒级启动</li></ul></div>
-        <div class="card"><h3>🖥️ Devin Desktop / IDE 客户端</h3><ul>
-          <li>基于 VS Code 界面的桌面 IDE，内置 Devin Local 智能体面板</li>
+        <div class="card"><h3>🖥️ Code Agent Desktop / IDE 客户端</h3><ul>
+          <li>基于 VS Code 界面的桌面 IDE，内置 Code Agent Local 智能体面板</li>
           <li>聊天、写码、跑码一体；支持 Open VSX 扩展市场</li>
           <li>本地任务：直接修改本机工作区，适合快速迭代</li>
-          <li>远端接力：一键把任务交给 Cloud Devin，本地实时看进度</li>
+          <li>远端接力：一键把任务交给 Cloud Agent，本地实时看进度</li>
           <li>任务完成后拉回代码到本地继续开发 / 执行</li></ul></div>
-        <div class="card"><h3>⌨️ Devin CLI</h3><ul>
+        <div class="card"><h3>⌨️ Code Agent CLI</h3><ul>
           <li>命令行本地编码智能体，终端内直接对话改码</li>
-          <li>支持把任务 hand off 给云端 Devin 继续执行</li>
+          <li>支持把任务 hand off 给云端 Agent 继续执行</li>
           <li>适合脚本化 / SSH 远程 / 无 GUI 场景</li></ul></div>
         <div class="card"><h3>🔌 API 与集成</h3><ul>
-          <li>Devin API：编程式创建会话、获取结构化结果，接入 CI/CD</li>
+          <li>Code Agent API：编程式创建会话、获取结构化结果，接入 CI/CD</li>
           <li>服务账号 + RBAC，安全可审计</li>
-          <li>Slack / Jira / Linear / GitHub 集成：@Devin 直接派任务</li>
+          <li>Slack / Jira / Linear / GitHub 集成：@CodeAgent 直接派任务</li>
           <li>MCP：连接外部工具与数据源</li></ul></div>
       </div>
       <table>
@@ -289,7 +289,7 @@ function sendTask(){
 
 /* ---------- local ---------- */
 function runLocal(text){
-  const m = addMsg('<span class="tag local">💻 Devin Local</span><br>正在分析本地工作区…', 'agent');
+  const m = addMsg('<span class="tag local">💻 Code Agent Local</span><br>正在分析本地工作区…', 'agent');
   setTimeout(()=>{ m.innerHTML += '<br>✏️ 修改 <code>backend/app/routers/chat.py</code>（+18 行 / -3 行）'; }, 1200);
   setTimeout(()=>{ m.innerHTML += '<br>🧪 运行 <code>pytest backend/tests</code> … <b style="color:var(--green)">4 passed</b>'; term('<span class="prompt">dev@local:~/ai-coder$</span> pytest backend/tests -q\n<span class="ok">.... 4 passed in 1.2s</span>'); }, 2600);
   setTimeout(()=>{ m.innerHTML += '<br>✅ <b style="color:var(--green)">本地任务完成</b>，代码已直接写入本机工作区。'; }, 3800);
@@ -332,7 +332,7 @@ function runRemote(text){
   document.getElementById('chatBody').appendChild(card);
   card.scrollIntoView({behavior:'smooth'});
 
-  addMsg('<span class="tag remote">☁️ Cloud Devin</span><br>已在云端 VM 启动会话，关闭客户端也会继续运行。下方实时同步进度 👇', 'agent');
+  addMsg('<span class="tag remote">☁️ Cloud Agent</span><br>已在云端 VM 启动会话，关闭客户端也会继续运行。下方实时同步进度 👇', 'agent');
 
   let step = 0;
   const lis = card.querySelectorAll('#steps-'+id+' li');
@@ -353,7 +353,7 @@ function runRemote(text){
       cItem.querySelector('.badge').className='badge done';
       cItem.querySelector('.badge').textContent='已完成';
       document.getElementById('pull-'+id).disabled = false;
-      addMsg('<span class="tag remote">☁️ Cloud Devin</span><br>✅ 远端任务完成！已创建 <b>PR #128（devin/sse-streaming）</b>，CI 全绿。点击任务卡片上的「⬇ 拉回本地」把代码同步到本机。', 'agent');
+      addMsg('<span class="tag remote">☁️ Cloud Agent</span><br>✅ 远端任务完成！已创建 <b>PR #128（agent/sse-streaming）</b>，CI 全绿。点击任务卡片上的「⬇ 拉回本地」把代码同步到本机。', 'agent');
       toast('☁️ 云端会话 #'+sessionSeq+' 已完成');
     }
   }, 1600);
@@ -361,7 +361,7 @@ function runRemote(text){
 
 function pullCode(id){
   document.getElementById('pull-'+id).disabled = true;
-  term('<span class="prompt">dev@local:~/ai-coder$</span> git fetch origin devin/sse-streaming && git checkout devin/sse-streaming\n<span class="out">remote: Enumerating objects: 12, done.</span>\n<span class="ok">切换到分支 devin/sse-streaming — 2 个文件已更新</span>');
+  term('<span class="prompt">dev@local:~/ai-coder$</span> git fetch origin agent/sse-streaming && git checkout agent/sse-streaming\n<span class="out">remote: Enumerating objects: 12, done.</span>\n<span class="ok">切换到分支 agent/sse-streaming — 2 个文件已更新</span>');
   const tree = document.getElementById('fileTree');
   const f1 = document.createElement('div'); f1.className='file new'; f1.textContent='routers/chat_stream.py';
   const f2 = document.createElement('div'); f2.className='file new'; f2.textContent='tests/test_chat_stream.py';
@@ -369,7 +369,7 @@ function pullCode(id){
   document.getElementById('editor').innerHTML =
 '<span class="cm"># routers/chat_stream.py — 从云端拉回的新代码</span>\n\n<span class="kw">from</span> fastapi.responses <span class="kw">import</span> StreamingResponse\n\n<span class="kw">@router.post</span>(<span class="str">"/chat/stream"</span>)\n<span class="kw">async def</span> <span class="fn">chat_stream</span>(req: ChatRequest):\n    <span class="kw">async def</span> <span class="fn">gen</span>():\n        <span class="kw">async for</span> chunk <span class="kw">in</span> llm.stream(req.messages):\n            <span class="kw">yield</span> <span class="str">f"data: {chunk}\\n\\n"</span>\n    <span class="kw">return</span> StreamingResponse(gen(), media_type=<span class="str">"text/event-stream"</span>)';
   document.getElementById('run-'+id).disabled = false;
-  addMsg('<span class="tag local">💻 本地</span><br>⬇ 代码已拉回本地（分支 <code>devin/sse-streaming</code>），左侧文件树新增 2 个文件。现在可以点「▶ 本地执行」运行。', 'agent');
+  addMsg('<span class="tag local">💻 本地</span><br>⬇ 代码已拉回本地（分支 <code>agent/sse-streaming</code>），左侧文件树新增 2 个文件。现在可以点「▶ 本地执行」运行。', 'agent');
   toast('⬇ 代码已拉回本地工作区');
 }
 
